@@ -143,22 +143,22 @@ const View = (() => {
     };
 
     //For completed list
-    const renderCompletedTodos = (todos) => {
-        let todosTemplate = "";
-        todos.forEach((todo) => {
+    const renderCompletedTodos = (completed) => {
+        let completedTemplate = "";
+        completed.forEach((comp) => {
             const liTemplate = `
             <li>
-                <span>${todo.content}</span>
-                <button class="delete-btn" id="${todo.id}">delete</button>
-                <button class="edit-btn" id="${todo.id}">edit</button>
-                <button class="left-btn" id="${todo.id}">left</button>
+                <span>${comp.content}</span>
+                <button class="delete-btn" id="${comp.id}">delete</button>
+                <button class="edit-btn" id="${comp.id}">edit</button>
+                <button class="left-btn" id="${comp.id}">left</button>
             </li>`;
-            todosTemplate += liTemplate;
+            completedTemplate += liTemplate;
         });
-        if (todos.length === 0) {
-            todosTemplate = "<h4>no task to display!</h4>";
+        if (completed.length === 0) {
+            completedTemplate = "<h4>no task to display!</h4>";
         }
-        // completedTodolistEl.innerHTML = "";
+        completedTodolistEl.innerHTML = completedTemplate;
     };
 
 
@@ -227,14 +227,6 @@ const Controller = ((view, model) => {
                 const currentContent = event.target.previousElementSibling.previousElementSibling;
 
                 if(event.target.textContent === "edit"){
-                    // const currentContent = spanEL.innerText;
-                    // console.log(currentContent);
-
-                    // const newContent = document.createElement("input");
-                    // newContent.value = currentContent;
-                    // spanEL.innerHTML = "";
-                    // spanEL.appendChild(newContent);
-
                     event.target.textContent = "save";
                     currentContent.contentEditable = "true";
             }
@@ -251,36 +243,38 @@ const Controller = ((view, model) => {
             }}
         )};
 
-    const handleShift = () => {
+    const handleRightShift = () => {
             view.todolistEl.addEventListener("click", (event)=> {
                 if(event.target.className === "right-btn"){
                     const id = event.target.id;
-                    console.log("id", id);
-                    const updatedTodo = {
-                        status: "completed"
-                    };
-                    model.updateTodo(id, updatedTodo).then((data) => {
-                        // const completedTodo = state.todos.find((todo) => todo.id === data.id);
+                    const currentContent = event.target.previousElementSibling.previousElementSibling.previousElementSibling;
+                    const newContent = currentContent.textContent;
+                    console.log(currentContent);
+    
+                    model.updateTodo(id, {content: newContent}).then((data) => {
                         state.todos = state.todos.filter((todo) => todo.id !== data.id);
                         state.completed = [data, ...state.completed];
-                        console.log(state.completed);
-                        // view.renderTodos(state.todos);
-                        // view.renderCompletedTodos(state.completed);
                     });
-                        
-                    // })
-                    // model.deleteTodo(+id).then((data) => {
-                    //     state.todos = state.todos.filter((todo) => todo.id !== +id);
-                    // });
-                  
-
-
-                   
-        
                 }
             })
         }
-
+    
+    const handleLeftShift = () => {
+        view.todolistEl.addEventListener("click", (event)=> {
+            if(event.target.className === "left-btn"){
+                const id = event.target.id;
+                console.log(id);
+                const currentContent = event.target.previousElementSibling.previousElementSibling.previousElementSibling;
+                const newContent = currentContent.textContent;
+                console.log(currentContent);
+                
+                model.updateTodo(id, {content: newContent}).then((data) => {
+                    state.todos = [data, ...state.todos];
+                    state.completed = state.completed.filter((completed) => completed.id !== data.id);
+                });
+            }
+        })
+    }
           
 
     const bootstrap = () => {
@@ -288,7 +282,8 @@ const Controller = ((view, model) => {
         handleSubmit();
         handleDelete();
         handleEdit();
-        handleShift();
+        handleRightShift();
+        handleLeftShift();
         state.subscribe(() => {
             view.renderTodos(state.todos);
             view.renderCompletedTodos(state.completed);
